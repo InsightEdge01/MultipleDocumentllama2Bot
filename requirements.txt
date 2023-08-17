@@ -8,3 +8,6 @@ faiss-cpu
 tiktoken
 ctransformers
 huggingface-hub
+pypdf 
+
+
