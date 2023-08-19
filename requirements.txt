@@ -8,6 +8,8 @@ faiss-cpu
 tiktoken
 ctransformers
 huggingface-hub
-pypdf 
+pypdf
+python-dotenv
+replicate
 
 
