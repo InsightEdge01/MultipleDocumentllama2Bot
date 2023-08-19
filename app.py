@@ -77,6 +77,7 @@ def main():
     load_dotenv()
     # Initialize session state
     initialize_session_state()
+    st.title("Multi-Docs ChatBot using llama2 :books:")
 
     if uploaded_files:
         text = []
