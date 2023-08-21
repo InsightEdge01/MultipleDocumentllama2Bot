@@ -11,5 +11,5 @@ huggingface-hub
 pypdf
 python-dotenv
 replicate
-
+docx2txt
 
