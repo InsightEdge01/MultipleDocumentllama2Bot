@@ -10,13 +10,13 @@ from langchain.memory import ConversationBufferMemory
 from langchain.document_loaders import PyPDFLoader
 from langchain.document_loaders import TextLoader
 from langchain.document_loaders import Docx2txtLoader
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 import os
 from dotenv import load_dotenv
 import tempfile
 
 
 load_dotenv()
-
 
 
 def initialize_session_state():
@@ -44,7 +44,8 @@ def display_chat_history(chain):
             submit_button = st.form_submit_button(label='Send')
 
         if submit_button and user_input:
-            output = conversation_chat(user_input, chain, st.session_state['history'])
+            with st.spinner('Generating response...'):
+                output = conversation_chat(user_input, chain, st.session_state['history'])
 
             st.session_state['past'].append(user_input)
             st.session_state['generated'].append(output)
@@ -59,10 +60,13 @@ def create_conversational_chain(vector_store):
     load_dotenv()
     # Create llm
     #llm = CTransformers(model="llama-2-7b-chat.ggmlv3.q4_0.bin",
-                        #streaming=True, model_type="llama", config={'max_new_tokens': 500, 'temperature': 0.01})
+                        #streaming=True, 
+                        #callbacks=[StreamingStdOutCallbackHandler()],
+                        #model_type="llama", config={'max_new_tokens': 500, 'temperature': 0.01})
     llm = Replicate(
         streaming = True,
-        model = "replicate/llama-2-70b-chat:58d078176e02c219e11eb4da5a02a7830a283b14cf8f94537af893ccff5ee781",
+        model = "replicate/llama-2-70b-chat:58d078176e02c219e11eb4da5a02a7830a283b14cf8f94537af893ccff5ee781", 
+        callbacks=[StreamingStdOutCallbackHandler()],
         input = {"temperature": 0.01, "max_length" :500,"top_p":1})
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
 
@@ -75,11 +79,11 @@ def main():
     load_dotenv()
     # Initialize session state
     initialize_session_state()
+    st.title("Multi-Docs ChatBot using llama2 :books:")
     # Initialize Streamlit
     st.sidebar.title("Document Processing")
-    st.title("Multi-Docs ChatBot using llama2 :books:")
     uploaded_files = st.sidebar.file_uploader("Upload files", accept_multiple_files=True)
-    
+
 
     if uploaded_files:
         text = []
@@ -105,7 +109,8 @@ def main():
         text_chunks = text_splitter.split_documents(text)
 
         # Create embeddings
-        embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2", model_kwargs={'device': 'cpu'})
+        embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2", 
+                                           model_kwargs={'device': 'cpu'})
 
         # Create vector store
         vector_store = FAISS.from_documents(text_chunks, embedding=embeddings)
@@ -113,8 +118,9 @@ def main():
         # Create the chain object
         chain = create_conversational_chain(vector_store)
 
-        st.title("Multi-Docs ChatBot using llama2 :books:")
+        
         display_chat_history(chain)
 
 if __name__ == "__main__":
     main()
+
